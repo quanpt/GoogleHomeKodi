@@ -43,6 +43,72 @@ const exec = (action) => {
     };
 };
 
+const commandHandle = (request, response, next) => {
+    let textString = request.query.text.trim();
+    let commandList = textString.split(" ");
+    request.query.q = commandList.slice(1).join(" ");
+    switch (commandList[0]) {
+        case "play":
+            request.query.q = commandList.slice(2).join(" ");
+            switch (commandList[1]) {
+                case "song":
+                    return(Helper.kodiPlaySong(request, response, next));
+                    break;
+                case "album":
+                    return(Helper.kodiPlayAlbum(request, response, next));
+                    break;
+                case "artist":
+                    return(Helper.kodiPlayArtist(request, response, next));
+                    break;
+                default:
+                    request.query.q = commandList.slice(1).join(" ");
+                    return(Helper.kodiPlayMovie(request, response, next));
+            }
+            break;
+        case "volume":
+            request.query.q = commandList.slice(2).join(" ");
+            switch (commandList[1]) {
+                case "down":
+                    return(Helper.kodiDecreaseVolume(request, response, next));
+                    break;
+                case "up":
+                    return(Helper.kodiIncreaseVolume(request, response, next));
+                    break;
+                default:
+                    return(Helper.kodiDecreaseVolume(request, response, next));
+            }
+            break;
+        case "resume":
+            switch (commandList[1]) {
+                default:
+                    return(Helper.kodiResumeMovie(request, response, next));
+            }
+            break;
+        case "pause":
+            return(Helper.kodiPlayPause(request, response, next));
+            break;
+        case "stop":
+            return(Helper.kodiStop(request, response, next));
+            break;
+        case "shuffle":
+            return(Helper.kodiShuffleEpisodeHandler(request, response, next));
+            break;
+        case "youtube":
+            return(Helper.kodiPlayYoutube(request, response, next));
+            break;
+        case "home":
+            return(Helper.kodiNavHome(request, response, next));
+            break;
+        case "mute":
+            return(Helper.kodiMuteToggle(request, response, next));
+            break;
+            
+        default:
+            handleError(null, request, response, next);
+            break;
+    }
+};
+
 const authenticate = function(request, response, next) {
 
     if (request === null || request.query === request) {
@@ -252,6 +318,8 @@ app.all('/togglePartymode', exec(Helper.kodiTogglePartymode));
 
 // Playlist Control
 app.all('/playercontrol', exec(Helper.playercontrol));
+
+app.all('/command', exec(commandHandle));
 
 app.get('/', (request, response) => {
     response.sendFile(`${__dirname}/views/index.html`);
